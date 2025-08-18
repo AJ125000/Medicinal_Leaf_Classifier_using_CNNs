@@ -1,12 +1,40 @@
 Link to the app: https://medicinalleafclassifier-4exsr8xydua8nuywfsx4ir.streamlit.app/
 
-Open the "medicinal-plant-leaf-classification (1).ipynb" file to see the code used for training the Resnet CNN by fine-tuning it on a custom dataset
 
 # Medicinal_Leaf_Classifier
 
-This is an app that classifies a given medicinal plant leaf image into one among the following classes:
+This is an app that classifies a given medicinal plant leaf image into one among the following 30 classes:
 
-['Asthma Plant.zip', 'Avaram.zip', 'Balloon vine.zip', 'Bellyache bush (Green).zip', 'Benghal dayflower.zip', 'Big Caltrops.zip', 'Black-Honey Shrub.zip', 'Bristly Wild Grape.zip', 'Butterfly Pea.zip', 'Cape Gooseberry.zip', 'Common Wireweed.zip', 'Country Mallow.zip', 'Crown flower.zip', 'Green Chireta.zip', 'Holy Basil.zip', 'Indian CopperLeaf.zip', 'Indian Jujube.zip', 'Indian Sarsaparilla.zip', 'Indian Stinging Nettle.zip', 'Indian Thornapple.zip', 'Indian wormwood.zip', 'Ivy Gourd.zip', 'Kokilaksha.zip', 'Land Caltrops (Bindii).zip', 'Madagascar Periwinkle.zip', 'Madras Pea Pumpkin.zip', 'Malabar Catmint.zip', 'Mexican Mint.zip', 'Mexican Prickly Poppy.zip', 'Mountain Knotgrass.zip', 'Nalta Jute.zip', 'Night blooming Cereus.zip', 'Panicled Foldwing.zip', 'Prickly Chaff Flower.zip', 'Punarnava.zip', 'Purple Fruited Pea Eggplant.zip', 'Purple Tephrosia.zip', 'Rosary Pea.zip', 'Shaggy button weed.zip', 'Small Water Clover.zip', 'Spiderwisp.zip', 'Square Stalked Vine.zip', 'Stinking Passionflower.zip', 'Sweet Basil.zip', 'Sweet flag.zip', 'Tinnevelly Senna.zip', 'Trellis Vine.zip', 'Velvet bean.zip', 'coatbuttons.zip', 'heart-leaved moonseed.zip']
+Alpinia Galanga (Rasna)
+Amaranthus Viridis (Arive-Dantu)
+Artocarpus Heterophyllus (Jackfruit)
+Azadirachta Indica (Neem)
+Basella Alba (Basale)
+Brassica Juncea (Indian Mustard)
+Carissa Carandas (Karanda)
+Citrus Limon (Lemon)
+Ficus Auriculata (Roxburgh fig)
+Ficus Religiosa (Peepal Tree)
+Hibiscus Rosa-sinensis
+Jasminum (Jasmine)
+Mangifera Indica (Mango)
+Mentha (Mint)
+Moringa Oleifera (Drumstick)
+Muntingia Calabura (Jamaica Cherry-Gasagase)
+Murraya Koenigii (Curry)
+Nerium Oleander (Oleander)
+Nyctanthes Arbor-tristis (Parijata)
+Ocimum Tenuiflorum (Tulsi)
+Piper Betle (Betel)
+Plectranthus Amboinicus (Mexican Mint)
+Pongamia Pinnata (Indian Beech)
+Psidium Guajava (Guava)
+Punica Granatum (Pomegranate)
+Santalum Album (Sandalwood)
+Syzygium Cumini (Jamun)
+Syzygium Jambos (Rose Apple)
+Tabernaemontana Divaricata (Crape Jasmine)
+Trigonella Foenum-graecum (Fenugreek)
 
 Just upload an image into the app, it will classify it as one among the above classes.
 
