@@ -1,5 +1,7 @@
 Link to the app: https://medicinalleafclassifier-4exsr8xydua8nuywfsx4ir.streamlit.app/
 
+See "medicinal-plant-leaf-classification.ipynb" to see the actual training process and results
+
 
 # Medicinal_Leaf_Classifier
 
