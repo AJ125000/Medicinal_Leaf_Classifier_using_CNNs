@@ -1,113 +1,140 @@
 import streamlit as st
 import torch
 import torch.nn as nn
-import cv2
-import numpy as np
-from torchvision import transforms
+from torchvision import models, transforms
 from PIL import Image
+import numpy as np
+import cv2
+from pathlib import Path
 
-def display_labels(labels):
-    st.subheader("Plant Leaf Images predictable: ")
-    st.write(f"Number of classes: {len(labels)}")
-    for label in labels:
-        st.write(f"- {label}")
-        
-# Define a function to load your trained model and weights
-def load_model():
-    model = torch.hub.load('pytorch/vision:v0.13.0', 'resnet50', pretrained=False)
-    # Load your trained model weights here (replace with your path and filename)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# --- CONFIGURATION ---
+st.set_page_config(
+    page_title="Medicinal Leaf Classifier",
+    page_icon="🌿",
+    layout="centered"
+)
+
+# Define paths and constants
+MODEL_PATH = Path("medicinal_leaf_classifier_best.pth")
+LABELS_PATH = Path("labels.txt")
+NUM_CLASSES = 30 # IMPORTANT: Change this to your actual number of classes (e.g., 30 or 40)
+
+# --- MODEL AND DATA LOADING (CACHED) ---
+
+@st.cache_resource
+def load_model(model_path, num_classes):
+    """Loads the pre-trained PyTorch model."""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    # Load the model architecture (ResNet-50)
+    model = models.resnet50(pretrained=False) # We load weights manually
+    
+    # --- THIS IS THE CRITICAL PART ---
+    # The classifier head MUST match the one from your training script
+    num_ftrs = model.fc.in_features
     model.fc = nn.Sequential(
-                nn.Linear(2048, 128),
-                nn.LayerNorm(128),
-                nn.ReLU(inplace=True),
-                nn.Dropout(p=0.2),
-#                 nn.Linear(512, 256),
-#                 nn.LayerNorm(256),
-#                 nn.ReLU(inplace=True),
-#                 nn.Dropout(p=0.3),
-                nn.Linear(128, 50)
-                )
-    model.load_state_dict(torch.load("weights1.h5", map_location=device))
-    # Freeze the model weights (optional)
-    for param in model.parameters():
-        param.requires_grad = False
-    model.eval()
+        nn.Linear(num_ftrs, 512),
+        nn.ReLU(),
+        nn.Dropout(0.4),
+        nn.Linear(512, num_classes)
+    )
+    # --------------------------------
+
+    # Load the trained weights
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    
+    model.to(device)
+    model.eval() # Set the model to evaluation mode
     return model
 
-# Preprocess the image for ResNet-50
-def preprocess_image(image):
-    
-    # Assuming image is a NumPy array
-    if isinstance(image, np.ndarray):
-        image = Image.fromarray(image)  # Convert to PIL Image
-    # Define a transformation for image preprocessing
+@st.cache_data
+def load_class_names(labels_path):
+    """Loads class names from a text file."""
+    with open(labels_path, "r") as f:
+        # Read lines and strip any trailing newline characters
+        class_names = [line.strip() for line in f.readlines()]
+    return class_names
+
+# --- PREDICTION FUNCTION ---
+
+def predict(model, image, class_names, device):
+    """Preprocesses an image and returns the prediction and confidence."""
+    # Define the image transformations (must match validation transforms)
     transform = transforms.Compose([
-    transforms.Resize((224, 224)),  # Resize the image to (224, 224)
-    transforms.ToTensor(), 
-    transforms.Normalize(# Convert the image to a PyTorch tensor
-        mean=[0.485, 0.456, 0.406],  # Normalize the image with mean and standard deviation
-        std=[0.229, 0.224, 0.225]
-    )
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     
     # Preprocess the image
-    preprocessed_image = transform(image)
-    return preprocessed_image.unsqueeze(0)  # Add batch dimension
-
-# Predict the class using the model
-def predict_class(model, image, threshold):
-    # Preprocess the image
-    preprocessed_image = preprocess_image(image)
+    image = transform(image).unsqueeze(0).to(device)
     
-    class_labels = []
-    with open("pred_class/dataset_classes.txt", "r") as f:
-        class_labels = f.readlines()    
-    # Make predictions
-    probabilities = model(preprocessed_image).softmax(dim=1)  # Assuming model outputs probabilities
-    prediction = torch.argmax(probabilities, dim=1).item()  # Get the predicted class index
-    predicted_label = class_labels[prediction]
-
-    # Check if probability is below the threshold
-    if probabilities[0][prediction] < threshold:  # Accessing the probability for the predicted class
-        predicted_label = "undetermined"
-
-    return predicted_label
-
-st.title("Medicinal Leaf Classification App")
-
-class_labels = []
-with open("pred_class/dataset_classes.txt", "r") as f:
-        class_labels = f.readlines()
+    with torch.no_grad():
+        outputs = model(image)
+        probabilities = torch.softmax(outputs, dim=1)
+        confidence, predicted_idx = torch.max(probabilities, 1)
     
-display_labels(class_labels)
+    predicted_label = class_names[predicted_idx.item()]
+    return predicted_label, confidence.item()
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+# --- STREAMLIT UI ---
 
-if uploaded_file is not None:
-    
-    image = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), cv2.IMREAD_COLOR)
-    st.image(image, channels="BGR")
-    
+def main():
+    st.title("🌿 Medicinal Leaf Classification")
+    st.write(
+        "Upload an image of a medicinal plant leaf, and the model will predict its species."
+    )
 
+    # Load model and class names
+    model = load_model(MODEL_PATH, NUM_CLASSES)
+    class_names = load_class_names(LABELS_PATH)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Load the model if not already loaded
-    if "model" not in st.session_state:
-        st.session_state["model"] = load_model()
+    # Sidebar for additional information
+    with st.sidebar:
+        st.header("About the Model")
+        st.write("This app uses a ResNet-50 deep learning model fine-tuned to classify medicinal plant leaves.")
+        st.subheader("Predictable Classes")
+        st.write(f"Total: {len(class_names)}")
+        # Use an expander for a clean look
+        with st.expander("Show all classes"):
+            st.write("\n".join(f"- {name}" for name in class_names))
 
-    if st.button("Predict"):
-        # Make predictions
+    # File uploader
+    uploaded_file = st.file_uploader(
+        "Choose a leaf image...", type=["jpg", "jpeg", "png"]
+    )
+
+    if uploaded_file is not None:
+        # Read the image file
+        file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+        # --- FIX: Convert from OpenCV's BGR to PIL's RGB format ---
+        opencv_image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        rgb_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+        pil_image = Image.fromarray(rgb_image)
+        # ------------------------------------------------------------
         
-        threshold = 0.7
-        prediction = predict_class(st.session_state["model"], image, threshold)
+        st.image(pil_image, caption="Uploaded Image", use_column_width=True)
         
-        # Download predicted class labels from a separate file (replace with your actual file)
-        class_labels = []
-        with open("pred_class/dataset_classes.txt", "r") as f:
-            class_labels = f.readlines()
+        if st.button("Classify Leaf"):
+            with st.spinner("Analyzing the leaf..."):
+                predicted_label, confidence = predict(model, pil_image, class_names, device)
+            
+            st.success("Prediction Complete!")
+            
+            # Display results with confidence
+            st.metric(label="Predicted Species", value=predicted_label)
+            st.metric(label="Confidence", value=f"{confidence:.2%}")
+            
+            # Optional: Add a confidence bar
+            st.progress(confidence)
 
-        predicted_label = prediction
-        
-        st.write(f"Predicted Class: {predicted_label}")
 
-st.session_state = st.session_state
+if __name__ == "__main__":
+    # Check for required files
+    if not MODEL_PATH.exists():
+        st.error(f"Model file not found! Make sure '{MODEL_PATH}' is in the same directory.")
+    elif not LABELS_PATH.exists():
+        st.error(f"Labels file not found! Make sure '{LABELS_PATH}' is in the same directory.")
+    else:
+        main()
