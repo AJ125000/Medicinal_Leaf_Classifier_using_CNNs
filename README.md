@@ -5,7 +5,7 @@ See "medicinal-plant-leaf-classification.ipynb" to see the actual training proce
 
 # Medicinal_Leaf_Classifier
 
-This is an app that classifies a given medicinal plant leaf image into one among the following 30 classes:
+This is an app that classifies a given medicinal plant leaf image into one among the following 50 classes:
 
 Asthma Plant
 Avaram
