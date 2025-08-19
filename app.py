@@ -15,9 +15,9 @@ st.set_page_config(
 )
 
 # Define paths and constants
-MODEL_PATH = Path("medicinal_leaf_classifier_best.pth")
+MODEL_PATH = Path("medicinal_leaf_classifier_best (1).pth")
 LABELS_PATH = Path("labels.txt")
-NUM_CLASSES = 30 # IMPORTANT: Change this to your actual number of classes (e.g., 30 or 40)
+NUM_CLASSES = 50 # IMPORTANT: Change this to your actual number of classes (e.g., 30 or 40)
 
 # --- MODEL AND DATA LOADING (CACHED) ---
 
